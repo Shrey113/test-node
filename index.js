@@ -5,6 +5,8 @@ const socket_io  = require("socket.io");
 const http = require("http")
 const morgan = require('morgan');
 
+const main_url = 'https://node-test-mauve.vercel.app'
+
 const {write_log_file,error_message,info_message,success_message,normal_message} = require('./modules/_all_help');
 const { send_welcome_page, send_otp_page } = require('./modules/send_server_email');
 const { generate_otp, get_otp, clear_otp } = require('./modules/OTP_generate');
@@ -15,7 +17,7 @@ const Chat = get_chats();
 
 const app = express();
 app.use(cors({
-    origin: 'https://node-test-mauve.vercel.app',  // No trailing slash here
+    origin: main_url,
     methods: ['GET', 'POST'],
     allowedHeaders: ['Content-Type'],
     credentials: true  // if you're using credentials (cookies, authorization headers, etc.)
@@ -26,7 +28,7 @@ app.use(express.urlencoded({ extended: true }));
 const server = http.createServer(app);
 const io = socket_io(server, {
  cors: {
-        origin: 'https://node-test-mauve.vercel.app',  // Again, no trailing slash
+        origin: main_url,  
         methods: ['GET', 'POST']
     }
 });
