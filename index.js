@@ -14,15 +14,21 @@ const User = get_users();
 const Chat = get_chats();
 
 const app = express();
-app.use(cors());
+app.use(cors({
+    origin: 'https://node-test-mauve.vercel.app',  // No trailing slash here
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Content-Type'],
+    credentials: true  // if you're using credentials (cookies, authorization headers, etc.)
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 const server = http.createServer(app);
 const io = socket_io(server, {
-  cors: {
-    origin: 'https://node-test-mauve.vercel.app/',
-  }
+ cors: {
+        origin: 'https://node-test-mauve.vercel.app',  // Again, no trailing slash
+        methods: ['GET', 'POST']
+    }
 });
 
 // app.use(morgan('dev'));
