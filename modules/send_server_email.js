@@ -31,7 +31,7 @@ async function send_email(to, subject, htmlContent) {
 
 async function send_welcome_page(email) {
     try {
-        const welcome_page_html = await fs.readFile('Data_file/email html/welcome_page_template.html', 'utf8');
+        const welcome_page_html = await fs.readFile('./welcome_page_template.html', 'utf8');
         await send_email(email, 'Welcome to Travel Buddy!', welcome_page_html);
     } catch (error) {
         error_message('Failed to send welcome email:', error);
@@ -40,7 +40,7 @@ async function send_welcome_page(email) {
 
 async function send_otp_page(email, otp_to_send) {
     try {
-        const otp_page_html = await fs.readFile('Data_file/email html/otp_template.html', 'utf8');
+        const otp_page_html = await fs.readFile('./otp_template.html', 'utf8');
         const email_html = otp_page_html.replace('{{OTP_CODE}}', otp_to_send);
         await send_email(email, 'Your OTP Code', email_html);
     } catch (error) {
