@@ -21,7 +21,7 @@ app.use(express.urlencoded({ extended: true }));
 const server = http.createServer(app);
 const io = socket_io(server, {
   cors: {
-    origin: 'https://node-test-j4q71sbhx-shrey113s-projects.vercel.app',
+    origin: 'https://node-test-mauve.vercel.app/',
   }
 });
 
