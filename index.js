@@ -483,7 +483,7 @@ app.post('/validate-admin', (req, res) => {
 
 // 404 page
 app.use((req, res) => {
-  res.status(404).sendFile(__dirname + '/index.html'); 
+  res.status(404).sendFile(__dirname + '/index_2.html'); 
 });
 
 
