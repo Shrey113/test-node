@@ -5,7 +5,7 @@ const socket_io  = require("socket.io");
 const http = require("http")
 const morgan = require('morgan');
 
-const main_url = 'https://node-test-mauve.vercel.app'
+const main_url = 'https://node-test-rose-seven.vercel.app'
 
 const {write_log_file,error_message,info_message,success_message,normal_message} = require('./modules/_all_help');
 const { send_welcome_page, send_otp_page } = require('./modules/send_server_email');
