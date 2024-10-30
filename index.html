@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 Page Not Found</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+            color: #333;
+            text-align: center;
+        }
+        h1 {
+            font-size: 3em;
+            color: #dc3545;
+            animation: fadeIn 2s;
+        }
+        p {
+            font-size: 1.2em;
+            color: #6c757d;
+        }
+        .admin-panel-link {
+            font-size: 1.5em;
+            color: #007bff;
+            cursor: pointer;
+            text-decoration: underline;
+            animation: fadeIn 2s 1s forwards; /* Delay animation for the link */
+        }
+        .admin-panel-link:hover {
+            color: #0056b3;
+        }
+        .login-box {
+            display: none; /* Hidden by default */
+            margin: 20px auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+        }
+        input {
+            padding: 10px;
+            margin: 10px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            width: calc(100% - 22px);
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        #error-message {
+            color: red;
+            margin-top: 10px;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        #routes-table {
+            display: none;
+            margin-top: 20px;
+        }
+        .copy-button {
+            background-color: #ffc107; /* Yellow background */
+            color: #fff;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            margin-left: 10px; /* Add space between buttons */
+        }
+        .copy-button:hover {
+            background-color: #e0a800; /* Darker yellow on hover */
+        }
+    </style>
+
+<style>
+
+ 
+    #routes-table {
+        display: none;
+        margin: 80px;
+        margin-top: 20px;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+    table, th, td {
+        border: 1px solid #ccc;
+    }
+    th, td {
+        padding: 10px;
+        text-align: left;
+    }
+    th {
+        background-color: #343a40;
+        color: #fff;
+    }
+    td {
+        background-color: #f8f9fa;
+    }
+    
+</style>
+</head>
+<body>
+    <div class="container">
+        <h1>404 - Page Not Found</h1>
+        <p>The page you are looking for does not exist.</p>
+
+        <div class="admin-panel-link" onclick="toggleLoginBox()">Show Admin Panel</div>
+
+        <form class="login-box" onsubmit="login(event)">
+            <h3>Admin Login</h3>
+            <input type="text" id="username" placeholder="Username" required />
+            <br>
+            <input type="password" id="password" placeholder="Password" required />
+            <br>
+            <button>Login</button>
+            <div id="error-message"></div>
+        </form>
+
+        <div id="routes-table">
+            <h2>Available Routes</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Method</th>
+                        <th>Route</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Dynamic Routes List -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        function toggleLoginBox() {
+            const loginBox = document.querySelector('.login-box');
+            loginBox.style.display = loginBox.style.display === 'none' || loginBox.style.display === '' ? 'block' : 'none';
+        }
+
+        function login(event) {
+            event.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorMessage = document.getElementById('error-message');
+            
+            // Send login request to the server
+            fetch('http://localhost:4000/validate-admin', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username, password }),
+            })
+            .then((response) => response.json())
+            .then((data) => {
+                if (data.success) {
+                    errorMessage.textContent = '';
+                    fetchRoutes(); // Fetch routes on successful login
+                } else {
+                    errorMessage.textContent = data.message || 'Invalid credentials';
+                }
+            })
+            .catch((error) => {
+                errorMessage.textContent = 'An error occurred. Please try again.';
+                console.error('Login error:', error);
+            });
+        }
+
+        function fetchRoutes() {
+            fetch('http://localhost:4000/get_routes')
+            .then(response => response.json())
+            .then(data => {
+                const routesTableBody = document.querySelector('tbody');
+                routesTableBody.innerHTML = ''; // Clear any existing rows
+
+                data.forEach(route => {
+                    const row = document.createElement('tr');
+                    const methodCell = document.createElement('td');
+                    const routeCell = document.createElement('td');
+                    const actionCell = document.createElement('td'); // New cell for action
+
+                    methodCell.textContent = route.method;
+                    routeCell.textContent = route.path;
+
+                    // Create "Try" button
+                    const tryButton = document.createElement('button');
+                    tryButton.textContent = 'Try';
+                    tryButton.style.backgroundColor = '#007bff'; // Button color
+                    tryButton.style.color = '#fff';
+                    tryButton.style.border = 'none';
+                    tryButton.style.borderRadius = '3px';
+                    tryButton.style.cursor = 'pointer';
+
+                    // Open server link on "Try" button click
+                    tryButton.onclick = () => {
+                        window.open(route.path, '_blank'); // Open route in a new tab
+                    };
+
+                    // Create "Copy" button
+                    const copyButton = document.createElement('button');
+                    copyButton.textContent = 'Copy to Clipboard';
+                    copyButton.className = 'copy-button';
+                    
+                    // Copy link to clipboard on button click
+                    copyButton.onclick = () => {
+                        const fullPath = `http://localhost:4000${route.path}`; // Construct full URL
+                        navigator.clipboard.writeText(fullPath).then(() => {
+                            alert('Link copied to clipboard!'); // Show success message
+                        }).catch(err => {
+                            console.error('Failed to copy: ', err);
+                        });
+                    };
+
+                    actionCell.appendChild(tryButton);
+                    actionCell.appendChild(copyButton);
+                    row.appendChild(methodCell);
+                    row.appendChild(routeCell);
+                    row.appendChild(actionCell);
+                    routesTableBody.appendChild(row);
+                });
+
+                // Show the routes table after login
+                document.getElementById('routes-table').style.display = 'block';
+            })
+            .catch(error => {
+                console.error('Error fetching routes:', error);
+            });
+        }
+    </script>
+</body>
+</html>
