@@ -14,34 +14,29 @@ const { get_users,get_chats } = require('./modules/mongodb');
 
 const User = get_users(); 
 const Chat = get_chats();
-
-
-
 const main_url = 'https://node-test-rose-seven.vercel.app'
+
 
 const app = express();
 app.use(cors({
-    origin: main_url,
-    methods: ['GET', 'POST'],
-    allowedHeaders: ['Content-Type'],
-    credentials: true  // if you're using credentials (cookies, authorization headers, etc.)
+  origin: main_url,
+  methods: ['GET', 'POST'],
+  allowedHeaders: ['Content-Type'],
+  credentials: true  // if you're using credentials (cookies, authorization headers, etc.)
 }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '5mb' }));
+app.use(express.urlencoded({ limit: '5mb', extended: true }));
+
 
 const server = http.createServer(app);
 const io = socket_io(server, {
- cors: {
-        origin: main_url,  
-        methods: ['GET', 'POST']
-    }
-});
+  cors: {
+         origin: main_url,  
+         methods: ['GET', 'POST']
+     }
+ });
+ 
 
-
-
-app.use(cors());
-app.use(express.json({ limit: '5mb' }));
-app.use(express.urlencoded({ limit: '5mb', extended: true }));
 // app.use(morgan('dev'));
 
 
@@ -54,6 +49,42 @@ async function save_last_active(email){
   }
 }
 
+async function updateMessageReadStatus(chat_id_1, chat_id_2, checkEmail,sender_email,receiver_email) {
+
+  try {
+    const chats = await Chat.find({
+      $or: [
+        { chat_id: chat_id_1 },
+        { chat_id: chat_id_2 }
+      ]
+    });
+
+    if (chats.length === 0) {
+      return;
+    }
+
+    for (const chat of chats) {
+      let isUpdated = false;
+      let list_of_updated_id = []
+
+      chat.messages.forEach(msg => {
+        if (msg.receiver_email === checkEmail && msg.is_read === false) {
+          msg.is_read = true;
+          isUpdated = true;
+          list_of_updated_id.push(msg._id.toString()); 
+        }
+      });
+
+      if (isUpdated) {
+        let data = {sender_email,list_of_updated_id}        
+        await chat.save();
+        io.emit("send_me_as_read",data)
+      }
+    }
+  } catch (error) {
+    console.error("Error updating messages:", error);
+  }
+}
 
 
 const PORT = 4000;
@@ -111,7 +142,10 @@ io.on("connection", (socket) => {
 
         await chat.save();
 
+        const newMessageId = chat.messages[chat.messages.length - 1]._id;
+
         const get_all_new_data = {
+            _id: newMessageId,
             sender_email: sender_email,
             receiver_email: receiver_email,
             message: message,
@@ -133,6 +167,18 @@ io.on("connection", (socket) => {
 
   socket.on('chat_typing_end_at',(data)=>{
     io.emit('off_type_animation',data)
+  });
+
+  socket.on("set_message_read",async (data)=>{
+    const email = data.email
+    const sender_email = data.sender_email
+    const receiver_email = data.receiver_email
+
+    let = chat_id_1 = `${sender_email}_%_%#%_%_${receiver_email}`
+    let = chat_id_2 = `${receiver_email}_%_%#%_%_${sender_email}`
+
+    updateMessageReadStatus(chat_id_1,chat_id_2,email,sender_email,receiver_email);
+
   });
 
 
@@ -158,7 +204,7 @@ io.on("connection", (socket) => {
 
 // Middleware usage
 app.use((req, res, next) => {
-  server_request_mode(req.ip, req.method, req.url, req.body);
+  server_request_mode(req.method, req.url, req.body);
   next();
 });
 
@@ -177,7 +223,6 @@ app.post('/api/get_chat', async (req, res) => {
       try {
           const chatId_2 = chat_id.split('_%_%#%_%_').reverse().join('_%_%#%_%_');
 
-          // Find or create the chat
           let chat = await Chat.findOne({
               $or: [
                   { chat_id: chat_id },
@@ -194,7 +239,6 @@ app.post('/api/get_chat', async (req, res) => {
               await chat.save();
           }
 
-          // Aggregate to retrieve messages with pagination
           const chatMessages = await Chat.aggregate([
               {
                   $match: {
@@ -215,6 +259,7 @@ app.post('/api/get_chat', async (req, res) => {
                   }
               }
           ]);
+          
 
           if (chatMessages.length > 0 && chatMessages[0].messages.length === 0) {
               return res.json({ show_null: "show_null" });
@@ -240,6 +285,8 @@ app.post('/api/get_chat', async (req, res) => {
       res.status(400).json({ message: 'Bad Request: chat_id is required' });
   }
 });
+
+
 
 
 app.post('/api/add_chat', async (req, res) => {
